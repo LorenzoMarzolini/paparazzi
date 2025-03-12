@@ -1,0 +1,28 @@
+<!DOCTYPE module SYSTEM "module.dtd">
+
+<module name="Floor_Detect_TCT" dir="Floor_Detection_TCT">
+  <doc>
+    <description>
+    desc
+    </description>
+    <define name="TCT_CAMERA_DETECTION_ID" value="ABI_BROADCAST" description="which VISUAL_DETECTION message to recieve for orange pole detection."/>
+  </doc>
+  <settings>
+    <dl_settings>
+      <dl_settings name="Floor_Detection_TCT">
+         <dl_setting var="green_threshold" min="1" step="1" max="255"/>
+         <dl_setting var="red_threshold" min="1" step="1" max="255"/>
+         <dl_setting var="blue_threshold" min="1" step="1" max="255"/>
+         <dl_setting var="oag_heading_rate" min="0" step="5" max="45" unit="rad" alt_unit="deg"/>
+      </dl_settings>
+    </dl_settings>
+  </settings>
+  <header>
+    <file name="Floor_Detect.h"/>
+  </header>
+  <init fun="floor_detect_init()"/>
+  <periodic fun="floor_detect_periodic()" freq="4"/>
+  <makefile target="ap|nps">
+    <file name="Floor_Detect.c"/>
+  </makefile>
+</module>

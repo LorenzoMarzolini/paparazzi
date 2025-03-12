@@ -1,0 +1,78 @@
+#include "modules/Floor_Detection_TCT/Floor_Detect.h" 
+#include <stdio.h>
+#include <time.h>
+#include "firmwares/rotorcraft/guidance/guidance_h.h"
+#include "generated/airframe.h"
+#include "state.h"
+#include "modules/core/abi.h"
+
+short green_threshold = 100;
+short red_threshold = 100;
+short blue_threshold = 70;
+float oag_max_speed = 1.0; 
+float oag_heading_rate = 5.0;
+
+enum navigation_state_t{
+    HOLD,
+    SAFE,
+    OBSTACLE_FOUND_LEFT,
+    OBSTACLE_FOUND_RIGHT,
+    OUT_OF_BOUNDS,
+    OUT_OF_BOUNDS_DELAY
+  };
+enum navigation_state_t navigation_state = HOLD;
+
+void floor_detect_reset(void)
+{
+    navigation_state = HOLD
+}
+#ifndef TCT_FLOOR_DETECTION_ID
+#error This module requires a camera, as such you have to define TCT_FLOOR_DETECTION_ID to the orange filter
+#error Please define TCT_FLOOR_DETECTION_ID to be COLOR_OBJECT_DETECTION1_ID or COLOR_OBJECT_DETECTION2_ID in your airframe
+#endif
+static abi_event floor_detection_ev;
+static void floor_detection_listener(uint8_t __attribute__((unused)) sender_id,
+                               int16_t __attribute__((unused)) pixel_x, int16_t __attribute__((unused)) pixel_y,
+                               int16_t __attribute__((unused)) pixel_width, int16_t __attribute__((unused)) pixel_height,
+                               int32_t quality, int16_t __attribute__((unused)) extra)
+{
+  color_count = quality;
+}
+
+void floor_detect_init(void)
+{
+  AbiBindMsgVISUAL_DETECTION(TCT_FLOOR_DETECTION_ID, &floor_detection_ev, floor_detection_listener);
+}
+
+void floor_detect_periodic(void)
+{
+  if (guidance_h.mode != GUIDANCE_H_MODE_GUIDED) {
+    floor_detect_reset();
+    return;
+  }
+  switch (navigation_state)
+  {
+  case HOLD:
+    guidance_h_set_body_vel(0, 0);
+    break;
+  
+  case SAFE:
+    guidance_h_set_body_vel(oag_max_speed, 0);
+    break;
+  
+  case OBSTACLE_FOUND_LEFT:
+    guidance_h_set_heading_rate(RadOfDeg(15));
+    
+    break;
+  case OBSTACLE_FOUND_RIGHT:
+  guidance_h_set_heading_rate(-RadOfDeg(15));
+    break;
+  case OUT_OF_BOUNDS:
+    guidance_h_set_body_vel(0, 0);
+    break;
+  case OUT_OF_BOUNDS_DELAY:
+    guidance_h_set_body_vel(0, 0);
+    break;
+  }
+
+}
