@@ -1,0 +1,30 @@
+<!DOCTYPE module SYSTEM "module.dtd">
+
+<module name="team4_opticflow_module">
+  <doc>
+    <description>
+This is the navigation module of the team 4 optic flow algorithm.
+
+    </description>
+    <define name="FLOW_OPTICFLOW_ID" value="ABI_BROADCAST" description="which VISUAL_DETECTION message to recieve for orange pole detection."/> <!-- This is orange_detect description, I don't know what this stands for.-->
+  </doc>
+    <!-- <settings>
+    <dl_settings>
+      <dl_settings name="OrangeAvoider">
+         <dl_setting var="oa_color_count_frac" min="0" step="0.01" max="0.5"/>
+      </dl_settings>
+    </dl_settings>
+  </settings> -->
+  
+  <dep>
+    <depends>cv_opticflow</depends>
+  </dep>
+  <header>
+    <file name="team4_opticalflow.h"/>
+  </header>
+  <init fun="team4_opticalflow_init()"/>
+  <periodic fun="team4_opticalflow_periodic()" freq="10"/>
+  <makefile target="ap|nps">
+    <file name="team4_opticalflow.c"/>
+  </makefile>
+</module>

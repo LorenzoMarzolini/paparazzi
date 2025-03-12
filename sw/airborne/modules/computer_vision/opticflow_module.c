@@ -65,6 +65,10 @@ PRINT_CONFIG_VAR(OPTICFLOW_FPS_CAMERA2)
 #define ACTIVE_CAMERAS 1
 #endif
 
+#ifndef FLOW_OPTICFLOW_ID
+#define FLOW_OPTICFLOW_ID ABI_BROADCAST
+#endif  
+
 /* The main opticflow variables */
 struct opticflow_t opticflow[ACTIVE_CAMERAS];                         ///< Opticflow calculations
 static struct opticflow_result_t opticflow_result[ACTIVE_CAMERAS];    ///< The opticflow result
@@ -137,6 +141,7 @@ void opticflow_module_run(void)
   for (int idx_camera = 0; idx_camera < ACTIVE_CAMERAS; idx_camera++) {
     if (opticflow_got_result[idx_camera]) {
       uint32_t now_ts = get_sys_time_usec();
+      // fprintf(stderr, "%d", FLOW_OPTICFLOW_ID + idx_camera);
       AbiSendMsgOPTICAL_FLOW(FLOW_OPTICFLOW_ID + idx_camera, now_ts,
                              opticflow_result[idx_camera].flow_x,
                              opticflow_result[idx_camera].flow_y,
