@@ -645,4 +645,17 @@
 #endif
 
 
+
+/*
+ * IDs of TCT_AP_Direct senders
+ */
+#ifndef TCT_AP_Direct_ID1
+#define TCT_AP_Direct_ID1 1
+#endif
+#ifndef TCT_AP_Direct_ID2
+#define TCT_AP_Direct_ID2 2
+#endif
+
+
+
 #endif /* ABI_SENDER_IDS_H */

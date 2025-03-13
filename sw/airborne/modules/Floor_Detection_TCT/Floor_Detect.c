@@ -20,32 +20,57 @@ enum navigation_state_t{
     OUT_OF_BOUNDS,
     OUT_OF_BOUNDS_DELAY
   };
-enum navigation_state_t navigation_state = HOLD;
+enum navigation_state_t navigation_state = SAFE;
 
 void floor_detect_reset(void)
 {
-    navigation_state = HOLD
+  guidance_h_set_body_vel(0, 0);
+  guidance_h_set_heading_rate(RadOfDeg(0));
 }
+
 #ifndef TCT_FLOOR_DETECTION_ID
 #error This module requires a camera, as such you have to define TCT_FLOOR_DETECTION_ID to the orange filter
 #error Please define TCT_FLOOR_DETECTION_ID to be COLOR_OBJECT_DETECTION1_ID or COLOR_OBJECT_DETECTION2_ID in your airframe
 #endif
 static abi_event floor_detection_ev;
-static void floor_detection_listener(uint8_t __attribute__((unused)) sender_id,
-                               int16_t __attribute__((unused)) pixel_x, int16_t __attribute__((unused)) pixel_y,
-                               int16_t __attribute__((unused)) pixel_width, int16_t __attribute__((unused)) pixel_height,
-                               int32_t quality, int16_t __attribute__((unused)) extra)
+static void floor_detection_listener(uint8_t __attribute__((unused)) sender_id, int8_t setting, int16_t __attribute__((unused)) extra)
 {
-  color_count = quality;
+
+  printf("Mode_listener: %d \n", (int)navigation_state);
+  switch (setting)
+  {
+  case 0:
+    navigation_state = HOLD;
+    break;
+  case 1:
+    navigation_state = SAFE;
+    break;
+  case 2:
+    navigation_state = OBSTACLE_FOUND_LEFT;
+    break;
+  case 3:
+    navigation_state = OBSTACLE_FOUND_RIGHT;
+    break;
+  case 4:
+    navigation_state = OUT_OF_BOUNDS;
+    break;
+  case 5:
+    navigation_state = OUT_OF_BOUNDS_DELAY;
+    break;
+  default:
+    navigation_state = HOLD;
+    break;
+  }
 }
 
 void floor_detect_init(void)
 {
-  AbiBindMsgVISUAL_DETECTION(TCT_FLOOR_DETECTION_ID, &floor_detection_ev, floor_detection_listener);
+  AbiBindMsgTCT_AP_Direct(TCT_FLOOR_DETECTION_ID, &floor_detection_ev, floor_detection_listener);
 }
 
 void floor_detect_periodic(void)
 {
+  printf("Mode_periodic: %d \n", (int)navigation_state);
   if (guidance_h.mode != GUIDANCE_H_MODE_GUIDED) {
     floor_detect_reset();
     return;
