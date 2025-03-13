@@ -14,9 +14,6 @@
 #define GREEN_FLOOR_GUIDED_H
 
 
-extern short green_threshold;
-extern short red_threshold;
-extern short blue_threshold;
 extern float oag_max_speed; 
 extern float oag_heading_rate;
 

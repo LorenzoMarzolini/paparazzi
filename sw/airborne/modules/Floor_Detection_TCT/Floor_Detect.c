@@ -6,9 +6,6 @@
 #include "state.h"
 #include "modules/core/abi.h"
 
-short green_threshold = 100;
-short red_threshold = 100;
-short blue_threshold = 70;
 float oag_max_speed = 1.0; 
 float oag_heading_rate = 5.0;
 
@@ -81,10 +78,12 @@ void floor_detect_periodic(void)
   {
   case HOLD:
     guidance_h_set_body_vel(0, 0);
+    guidance_h_set_heading_rate(RadOfDeg(0));
     break;
   
   case SAFE:
     guidance_h_set_body_vel(oag_max_speed, 0);
+    guidance_h_set_heading_rate(RadOfDeg(0));
     break;
   
   case OBSTACLE_FOUND_LEFT:
