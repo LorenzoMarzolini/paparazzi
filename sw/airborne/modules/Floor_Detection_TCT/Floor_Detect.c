@@ -32,8 +32,6 @@ void floor_detect_reset(void)
 static abi_event floor_detection_ev;
 static void floor_detection_listener(uint8_t __attribute__((unused)) sender_id, int8_t setting, int16_t __attribute__((unused)) extra)
 {
-
-  printf("Mode_listener: %d \n", (int)navigation_state);
   switch (setting)
   {
   case 0:
@@ -69,7 +67,6 @@ void floor_detect_init(void)
 
 void floor_detect_periodic(void)
 {
-  printf("Mode_periodic: %d \n", (int)navigation_state);
   if (guidance_h.mode != GUIDANCE_H_MODE_GUIDED) {
     floor_detect_reset();
     return;

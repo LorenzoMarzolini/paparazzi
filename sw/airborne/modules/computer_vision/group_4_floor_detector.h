@@ -12,5 +12,5 @@ extern uint8_t R_lim;
 extern uint8_t G_lim;
 extern uint8_t B_lim;
 extern bool det_draw1;
-
+extern bool det_draw2;
 #endif

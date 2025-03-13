@@ -1,6 +1,8 @@
 
-
+#include <stdbool.h>
 #include <stdio.h>
+#include <string.h>
+
 
 #include "modules/computer_vision/lib/vision/image.h"
 #include "group_4_floor_detector.h"
@@ -12,15 +14,102 @@ uint8_t G_lim = 100;
 uint8_t B_lim = 70;
 
 bool det_draw1 = FLOOR_DET_DRAW;
+bool det_draw2 = FLOOR_DET_DRAW2;
 
 
+//copilot
+bool visited[WIDTH][HEIGHT];
+
+// Function for flood-fill to find a cluster
+static int floodFill(uint8_t *buffer, uint8_t *new_buffer, int x, int y, short w, short h, bool write_to_new_buffer) {
+  int cluster_size = 0;
+  int queue[HEIGHT * WIDTH][2];  // Queue for BFS
+  int front = 0, rear = 0;
+
+  // Start flood-fill at (x, y)
+  queue[rear][0] = x;
+  queue[rear][1] = y;
+  rear++;
+  visited[x][y] = true;
+
+  while (front < rear) {
+      int cx = queue[front][0];
+      int cy = queue[front][1];
+      front++;
+
+      cluster_size++;
+
+      if (write_to_new_buffer) {
+          new_buffer[cx * w + cy] = 255;  // Write to new buffer
+          
+      }
+
+      // Check 8 neighbors (including diagonals)
+      int neighbors[8][2] = {
+          {cx - 1, cy}, {cx + 1, cy}, {cx, cy - 1}, {cx, cy + 1},      // Up, Down, Left, Right
+          {cx - 1, cy - 1}, {cx - 1, cy + 1}, {cx + 1, cy - 1}, {cx + 1, cy + 1} // Diagonals
+      };
+
+      for (int i = 0; i < 8; i++) {
+          int nx = neighbors[i][0];
+          int ny = neighbors[i][1];
+
+          if (nx >= 0 && nx < h && ny >= 0 && ny < w && !visited[nx][ny] && buffer[nx * w + ny] == 255) {
+              visited[nx][ny] = true;
+              queue[rear][0] = nx;
+              queue[rear][1] = ny;
+              rear++;
+          }
+      }
+  }
+  printf("cluster size: %d\n", cluster_size);
+  return cluster_size;
+}
+
+
+// Main function to find and isolate the largest cluster
+static void isolateLargestCluster(uint8_t *buffer, uint8_t *new_buffer, short w, short h) {
+    memset(visited, 0, sizeof(visited));  // Reset the visited array
+    printf("Start\n");
+    int max_cluster_size = 0;
+    int max_cluster_x = -1, max_cluster_y = -1;
+
+    // First pass: find the largest cluster
+    for (short i = 0; i < h; i++) {
+        for (short j = 0; j < w; j++) {
+            if (!visited[i][j] && buffer[i * w + j] == 255) {
+                int cluster_size = floodFill(buffer, NULL ,i, j, w, h, false);  // Find cluster size
+                if (cluster_size > max_cluster_size) {
+                    max_cluster_size = cluster_size;
+                    max_cluster_x = i;
+                    max_cluster_y = j;
+                }
+            }
+        }
+    }
+    printf("end\n");
+    // Reset visited array for the second pass
+    memset(visited, 0, sizeof(visited));
+    memset(new_buffer, 0, w * h);  // Clear the new buffer
+
+    // Second pass: extract the largest cluster
+    if (max_cluster_x != -1 && max_cluster_y != -1) {
+        floodFill(buffer, new_buffer, max_cluster_x, max_cluster_y, w, h, true);
+    }
+
+}
+
+
+// not copilot
 static pthread_mutex_t mutex;
 static struct msg_det{
   uint8_t cmd;
   bool updated;
 };
 
-uint8_t Buffer_2[520*240];
+uint8_t Buffer_2[HEIGHT*WIDTH];
+uint8_t Buffer_3[HEIGHT*WIDTH];
+uint8_t Buffer_4[HEIGHT*WIDTH];
 
 struct msg_det move_global[1];
 static struct image_t *g4_floor_det_func(struct image_t *img, uint8_t camera_id __attribute__((unused)))
@@ -47,6 +136,8 @@ static struct image_t *g4_floor_det_func(struct image_t *img, uint8_t camera_id 
       source += 4;
     }
   }
+  isolateLargestCluster(Buffer_2, Buffer_3, w, h);
+
   pthread_mutex_lock(&mutex);
   move_global[0].cmd = 1;
   move_global[0].updated = true;
@@ -67,6 +158,22 @@ static struct image_t *g4_floor_det_func(struct image_t *img, uint8_t camera_id 
       }
     }
   }
+  if(det_draw2){
+    uint8_t *source2 = (uint8_t *)img->buf;
+    uint8_t *dest2 = Buffer_3;
+    for(short i = 0; i<h; i++){
+      for(short j = 0; j<w; j+=2){
+        // check if in image or not
+        source2[1] = dest2[0];
+        source2[0] = 128;
+        source2[3] = dest2[1];
+        source2[2] = 128;  
+        dest2+= 2;
+        source2 += 4;
+      }
+    }
+  }
+  
 
   return img; // func did not make a new image
 }
