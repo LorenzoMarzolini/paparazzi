@@ -14,7 +14,7 @@ def compute_gradients(image):
     Iy = (np.roll(image, -1, axis=0) - np.roll(image, 1, axis=0)) / 2.0
     return Ix, Iy
 
-def compute_optical_flow_lk(prev_frame, next_frame, window_size=5, step=16):
+def compute_optical_flow_lk(prev_frame, next_frame, window_size, step):
     """
     Compute optical flow using Lucas-Kanade approach on a grid of points.
     Converts frames to grayscale and computes the flow vectors between them.
@@ -58,7 +58,7 @@ def draw_optical_flow(flow_vectors, frame):
         cv2.circle(frame, (x, y), 1, (0, 255, 0), -1)
     return frame
 
-def detect_obstacles(flow_vectors, img_width, obstacle_threshold=2.0):
+def detect_obstacles(flow_vectors, img_width, obstacle_threshold):
     """
     Slide a window along the x-axis to detect obstacles.
     The 'obstacle_threshold' is critical: if the mean magnitude of the flow vectors
