@@ -22,5 +22,6 @@ extern float oag_heading_rate;
 
 extern void floor_detect_init(void);
 extern void floor_detect_periodic(void);
+void floor_detect_reset(void);
 
 #endif

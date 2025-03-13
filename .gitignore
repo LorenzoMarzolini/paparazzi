@@ -204,3 +204,4 @@ tests/results/*
 
 # K-develop
 *.kate-swp
+/sw/airborne/.vscode

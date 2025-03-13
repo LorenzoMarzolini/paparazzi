@@ -21,7 +21,7 @@
     <file name="Floor_Detect.h"/>
   </header>
   <init fun="floor_detect_init()"/>
-  <periodic fun="floor_detect_periodic()" freq="4"/>
+  <periodic fun="floor_detect_periodic()" freq="10"/>
   <makefile target="ap|nps">
     <file name="Floor_Detect.c"/>
   </makefile>

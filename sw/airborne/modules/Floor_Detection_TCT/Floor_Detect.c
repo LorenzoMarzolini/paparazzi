@@ -20,7 +20,7 @@ enum navigation_state_t{
     OUT_OF_BOUNDS,
     OUT_OF_BOUNDS_DELAY
   };
-enum navigation_state_t navigation_state = SAFE;
+enum navigation_state_t navigation_state = HOLD;
 
 void floor_detect_reset(void)
 {
@@ -65,7 +65,9 @@ static void floor_detection_listener(uint8_t __attribute__((unused)) sender_id, 
 
 void floor_detect_init(void)
 {
+  printf("Listener_setup");
   AbiBindMsgTCT_AP_Direct(TCT_FLOOR_DETECTION_ID, &floor_detection_ev, floor_detection_listener);
+  printf("Listener_ready");
 }
 
 void floor_detect_periodic(void)
