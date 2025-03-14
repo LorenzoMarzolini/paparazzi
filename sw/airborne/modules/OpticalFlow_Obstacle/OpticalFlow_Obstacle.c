@@ -1,15 +1,3 @@
-/**
- * @file "modules/OpticalFlow_Obstacle/OpticalFlow_Obstacle.c"
- * @author 
- * Lorenzo Marzolini
- *
- * @brief Optical flow based obstacle detection.
- *
- * This module processes camera images to compute a simplified optical flow using a Lucas-Kanade approach.
- * It then detects obstacles based on the average flow magnitude on the left and right halves of the image.
- * A command is sent via ABI based on which side is more obstructed.
- */
-
 #include "OpticalFlow_Obstacle.h"
 #include "modules/computer_vision/cv.h"  // Assumes existence of image_t and cv_add_to_device
 #include "modules/core/abi.h"
