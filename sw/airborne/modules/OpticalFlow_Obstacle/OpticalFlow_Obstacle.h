@@ -1,13 +1,4 @@
-/**
- * @file "modules/OpticalFlow_Obstacle/OpticalFlow_Obstacle.h"
- * @author 
- * Lorenzo Marzolini
- *
- * @brief Module for optical flow based obstacle detection.
- *
- * This module computes optical flow from consecutive camera frames to detect obstacles.
- * The decision is based on free space estimation: the drone will turn towards the side with more free space.
- */
+#include <stdio.h>
 
 #ifndef OPTICAL_FLOW_OBSTACLE_H
 #define OPTICAL_FLOW_OBSTACLE_H
