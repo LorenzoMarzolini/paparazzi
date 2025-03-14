@@ -16,12 +16,8 @@
 extern float oag_max_speed; 
 extern float oag_heading_rate;
 
-// Initialize the optical flow obstacle detection module
 extern void optical_flow_obs_init(void);
-
-// Periodic function (if needed) to process frames; the optical flow is mainly computed in the camera callback.
 extern void optical_flow_obs_periodic(void);
-
 void optical_flow_obs_reset(void);
 
 #endif // OPTICAL_FLOW_OBSTACLE_H
