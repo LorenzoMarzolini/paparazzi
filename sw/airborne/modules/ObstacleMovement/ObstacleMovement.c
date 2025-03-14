@@ -1,16 +1,6 @@
-/**
- * @file "modules/ObstacleMovement/ObstacleMovement.c"
- * @author 
- * Lorenzo Marzolini
- *
- * @brief Obstacle avoidance movement module.
- *
- * This module listens for commands sent by the obstacle detection module (via ABI)
- * and sets the drone's velocity and heading rate accordingly.
- */
-
-#include "ObstacleMovement.h"
+#include "modules/ObstacleMovement/ObstacleMovement.h"
 #include <stdio.h>
+#include <time.h>
 #include "firmwares/rotorcraft/guidance/guidance_h.h"
 #include "generated/airframe.h"
 #include "state.h"
