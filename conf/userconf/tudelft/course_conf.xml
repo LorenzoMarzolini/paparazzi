@@ -22,7 +22,7 @@
    gui_color="white"
   />
   <aircraft
-   name="bebop_obstacle_avoid_guided"
+   name="bebop_obstacle_avoid_optic_flow"
    ac_id="54"
    airframe="airframes/tudelft/bebop_course_obstacleavoid_guided.xml"
    radio="radios/dummy.xml"
