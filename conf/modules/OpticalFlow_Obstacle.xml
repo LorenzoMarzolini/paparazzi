@@ -9,7 +9,7 @@
       on which side (left or right) is more obstructed.
     </description>
     <!-- Define the camera to use. Ensure that FLOOR_DET_CAMERA is defined globally if needed -->
-    <define name="FLOOR_DET_CAMERA" value="front_camera" description="Video device to use"/>
+    <define name="TCT_CAMERA_DETECTION_ID" value="ABI_BROADCAST" description="which VISUAL_DETECTION message to recieve for orange pole detection."/>
   </doc>
   
   <!-- Optional settings if you wish to adjust parameters; currently none are exposed -->
