@@ -18,9 +18,9 @@
       </dl_settings>
     </dl_settings>
   </settings>
-
-  <dep>
-    <depends>video_thread</depends>
+  
+ <dep>
+    <depends>OpticalFlow_Obstacle</depends>
   </dep>
   
   <header>
