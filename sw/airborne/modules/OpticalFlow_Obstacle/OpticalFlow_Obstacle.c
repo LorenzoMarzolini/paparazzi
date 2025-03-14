@@ -1,0 +1,225 @@
+/**
+ * @file "modules/OpticalFlow_Obstacle/OpticalFlow_Obstacle.c"
+ * @author 
+ * Lorenzo Marzolini
+ *
+ * @brief Optical flow based obstacle detection.
+ *
+ * This module processes camera images to compute a simplified optical flow using a Lucas-Kanade approach.
+ * It then detects obstacles based on the average flow magnitude on the left and right halves of the image.
+ * A command is sent via ABI based on which side is more obstructed.
+ */
+
+#include "OpticalFlow_Obstacle.h"
+#include "modules/computer_vision/cv.h"  // Assumes existence of image_t and cv_add_to_device
+#include "modules/core/abi.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdint.h>
+#include <math.h>
+#include <string.h>
+
+// Define parameters (adjust as needed)
+#define WINDOW_SIZE 6
+#define STEP_SIZE 20
+#define OBSTACLE_THRESHOLD 4.0f
+#define MAX_FLOW_VECTORS 1000
+
+// Use predefined image dimensions (from airframe settings)
+#ifndef WIDTH
+#define WIDTH 520
+#endif
+#ifndef HEIGHT
+#define HEIGHT 240
+#endif
+
+// Structure for flow vector (position and flow components)
+typedef struct {
+  int x;
+  int y;
+  float u;
+  float v;
+} flow_vector_t;
+
+// Global static variables
+static uint8_t prev_gray[HEIGHT * WIDTH];
+static int first_frame = 1;
+
+// Buffer for flow vectors
+static flow_vector_t flow_vectors[MAX_FLOW_VECTORS];
+static int flow_count = 0;
+
+/**
+ * @brief Convert the image to grayscale.
+ * For a YUV422 image, the Y channel is extracted.
+ */
+static void convert_to_gray(uint8_t *src, uint8_t *gray, int w, int h) {
+  int num_pixels = w * h;
+  int src_index = 0;
+  int gray_index = 0;
+  while (gray_index < num_pixels) {
+    // First pixel: Y component at index 1
+    gray[gray_index++] = src[src_index + 1];
+    // Second pixel: Y component at index 3
+    if (gray_index < num_pixels)
+      gray[gray_index++] = src[src_index + 3];
+    src_index += 4;
+  }
+}
+
+/**
+ * @brief Compute horizontal and vertical gradients using central differences.
+ */
+static void compute_gradients(uint8_t *gray, int w, int h, float *Ix, float *Iy) {
+  int x, y;
+  for (y = 1; y < h - 1; y++) {
+    for (x = 1; x < w - 1; x++) {
+      int idx = y * w + x;
+      Ix[idx] = ((float)gray[y * w + (x+1)] - (float)gray[y * w + (x-1)]) / 2.0f;
+      Iy[idx] = ((float)gray[(y+1) * w + x] - (float)gray[(y-1) * w + x]) / 2.0f;
+    }
+  }
+}
+
+/**
+ * @brief Compute optical flow using a simplified Lucas-Kanade method on a grid.
+ */
+static void compute_optical_flow(uint8_t *prev, uint8_t *curr, int w, int h) {
+  float Ix[HEIGHT * WIDTH];
+  float Iy[HEIGHT * WIDTH];
+  memset(Ix, 0, sizeof(Ix));
+  memset(Iy, 0, sizeof(Iy));
+  
+  compute_gradients(prev, w, h, Ix, Iy);
+  
+  flow_count = 0;
+  int margin = WINDOW_SIZE / 2;
+  for (int y = margin; y < h - margin; y += STEP_SIZE) {
+    for (int x = margin; x < w - margin; x += STEP_SIZE) {
+      float sum_Ix2 = 0.0f, sum_Iy2 = 0.0f, sum_IxIy = 0.0f;
+      float sum_IxIt = 0.0f, sum_IyIt = 0.0f;
+      for (int j = -margin; j <= margin; j++) {
+        for (int i = -margin; i <= margin; i++) {
+          int idx = (y + j) * w + (x + i);
+          float ix = Ix[idx];
+          float iy = Iy[idx];
+          float it = (float)curr[idx] - (float)prev[idx];
+          sum_Ix2 += ix * ix;
+          sum_Iy2 += iy * iy;
+          sum_IxIy += ix * iy;
+          sum_IxIt += ix * it;
+          sum_IyIt += iy * it;
+        }
+      }
+      float det = sum_Ix2 * sum_Iy2 - sum_IxIy * sum_IxIy;
+      float u = 0.0f, v = 0.0f;
+      if (det != 0.0f) {
+        u = (-sum_Iy2 * sum_IxIt + sum_IxIy * sum_IyIt) / det;
+        v = (-sum_IxIy * sum_IxIt + sum_Ix2 * sum_IyIt) / det;
+      }
+      if (flow_count < MAX_FLOW_VECTORS) {
+        flow_vectors[flow_count].x = x;
+        flow_vectors[flow_count].y = y;
+        flow_vectors[flow_count].u = u;
+        flow_vectors[flow_count].v = v;
+        flow_count++;
+      }
+    }
+  }
+}
+
+/**
+ * @brief Detect obstacles by comparing the average optical flow magnitude
+ * on the left and right halves of the image.
+ *
+ * @param w Image width.
+ * @param h Image height.
+ * @param obstacle_left Pointer to flag indicating an obstacle on the left (1 if yes).
+ * @param obstacle_right Pointer to flag indicating an obstacle on the right (1 if yes).
+ */
+static void detect_obstacles(int w, int h, int *obstacle_left, int *obstacle_right) {
+  float left_sum = 0.0f, right_sum = 0.0f;
+  int left_count = 0, right_count = 0;
+  for (int i = 0; i < flow_count; i++) {
+    float mag = sqrtf(flow_vectors[i].u * flow_vectors[i].u + flow_vectors[i].v * flow_vectors[i].v);
+    if (flow_vectors[i].x < w / 2) {
+      left_sum += mag;
+      left_count++;
+    } else {
+      right_sum += mag;
+      right_count++;
+    }
+  }
+  float left_avg = (left_count > 0) ? (left_sum / left_count) : 0.0f;
+  float right_avg = (right_count > 0) ? (right_sum / right_count) : 0.0f;
+  
+  *obstacle_left = (left_avg > OBSTACLE_THRESHOLD) ? 1 : 0;
+  *obstacle_right = (right_avg > OBSTACLE_THRESHOLD) ? 1 : 0;
+}
+
+/**
+ * @brief Main optical flow processing function called by the camera.
+ *
+ * Processes the current frame, computes optical flow relative to the previous frame,
+ * detects obstacles, and sends a command via ABI.
+ *
+ * @param img Pointer to the current image.
+ * @param camera_id Unused camera identifier.
+ * @return Pointer to the processed image.
+ */
+static struct image_t *optical_flow_obs_func(struct image_t *img, uint8_t camera_id __attribute__((unused))) {
+  uint8_t curr_gray[HEIGHT * WIDTH];
+  convert_to_gray(img->buf, curr_gray, WIDTH, HEIGHT);
+  
+  if (first_frame) {
+    memcpy(prev_gray, curr_gray, WIDTH * HEIGHT);
+    first_frame = 0;
+    return img;
+  }
+  
+  // Compute optical flow between previous and current grayscale images
+  compute_optical_flow(prev_gray, curr_gray, WIDTH, HEIGHT);
+  
+  // Detect obstacles based on the computed flow vectors
+  int obs_left = 0, obs_right = 0;
+  detect_obstacles(WIDTH, HEIGHT, &obs_left, &obs_right);
+  
+  // Decide command based on free space:
+  // - If both sides are clear: SAFE (command 1)
+  // - If only the left side shows an obstacle, turn right (command 3)
+  // - If only the right side shows an obstacle, turn left (command 2)
+  // - If both sides show obstacles, spin (command 4)
+  uint8_t cmd = 1; // SAFE by default
+  if (obs_left && !obs_right) {
+    cmd = 3; // Turn right
+  } else if (obs_right && !obs_left) {
+    cmd = 2; // Turn left
+  } else if (obs_left && obs_right) {
+    cmd = 4; // Spin in place
+  }
+  
+  // Send the command via ABI using the pre-defined TCT_FLOOR_DETECTION_ID
+  AbiSendMsgTCT_AP_Direct(TCT_FLOOR_DETECTION_ID, cmd, 0);
+  
+  // Update previous frame for the next iteration
+  memcpy(prev_gray, curr_gray, WIDTH * HEIGHT);
+  
+  return img;
+}
+
+/**
+ * @brief Initialize the optical flow obstacle detection module.
+ */
+void optical_flow_obs_init(void) {
+  first_frame = 1;
+  // Register the optical flow callback with the camera device (using FLOOR_DET_CAMERA)
+  cv_add_to_device(&FLOOR_DET_CAMERA, optical_flow_obs_func, 0, 0);
+  printf("Optical Flow Obstacle Detection Initialized\n");
+}
+
+/**
+ * @brief Periodic function (not used in this implementation).
+ */
+void optical_flow_obs_periodic(void) {
+  // No additional periodic processing required.
+}
