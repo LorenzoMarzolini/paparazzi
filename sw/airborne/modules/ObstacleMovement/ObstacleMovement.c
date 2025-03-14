@@ -21,6 +21,12 @@ enum navigation_state_t {
 
 static enum navigation_state_t navigation_state = SAFE;
 
+void obstacle_move_reset(void)
+{
+  guidance_h_set_body_vel(0, 0);
+  guidance_h_set_heading_rate(RadOfDeg(0));
+}
+
 static abi_event obstacle_movement_ev;
 
 /**
