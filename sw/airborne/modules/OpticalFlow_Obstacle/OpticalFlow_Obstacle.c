@@ -6,6 +6,7 @@
 #include <stdint.h>
 #include <math.h>
 #include <string.h>
+#include <pthread.h>  // Necessario per la gestione dei mutex
 
 // Define parameters (adjust as needed)
 #define WINDOW_SIZE 6
@@ -29,13 +30,21 @@ typedef struct {
   float v;
 } flow_vector_t;
 
-// Global static variables
+// Global static variables for optical flow
 static uint8_t prev_gray[HEIGHT * WIDTH];
 static int first_frame = 1;
-
-// Buffer for flow vectors
 static flow_vector_t flow_vectors[MAX_FLOW_VECTORS];
 static int flow_count = 0;
+
+// Struttura per la comunicazione del comando, simile a quella del prof.
+typedef struct {
+  uint8_t cmd;
+  bool updated;
+} flow_msg_t;
+
+// Variabile globale per il comando e mutex per la sincronizzazione
+static flow_msg_t flow_move = {0, false};
+static pthread_mutex_t flow_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 /**
  * @brief Convert the image to grayscale.
@@ -149,7 +158,7 @@ static void detect_obstacles(int w, int h, int *obstacle_left, int *obstacle_rig
  * @brief Main optical flow processing function called by the camera.
  *
  * Processes the current frame, computes optical flow relative to the previous frame,
- * detects obstacles, and sends a command via ABI.
+ * detects obstacles, and updates il comando da inviare.
  *
  * @param img Pointer to the current image.
  * @param camera_id Unused camera identifier.
@@ -173,10 +182,10 @@ static struct image_t *optical_flow_obs_func(struct image_t *img, uint8_t camera
   detect_obstacles(WIDTH, HEIGHT, &obs_left, &obs_right);
   
   // Decide command based on free space:
-  // - If both sides are clear: SAFE (command 1)
-  // - If only the left side shows an obstacle, turn right (command 3)
-  // - If only the right side shows an obstacle, turn left (command 2)
-  // - If both sides show obstacles, spin (command 4)
+  // - SAFE (1) se entrambi i lati sono liberi
+  // - Se solo il lato sinistro ha ostacoli -> gira a destra (3)
+  // - Se solo il lato destro ha ostacoli -> gira a sinistra (2)
+  // - Se entrambi i lati hanno ostacoli -> gira sul posto (4)
   uint8_t cmd = 1; // SAFE by default
   if (obs_left && !obs_right) {
     cmd = 3; // Turn right
@@ -186,13 +195,37 @@ static struct image_t *optical_flow_obs_func(struct image_t *img, uint8_t camera
     cmd = 4; // Spin in place
   }
   
-  // Send the command via ABI using the pre-defined TCT_FLOOR_DETECTION_ID
-  AbiSendMsgTCT_AP_Direct(TCT_FLOOR_DETECTION_ID, cmd, 0);
+  // Invece di inviare direttamente il comando, lo memorizziamo in una variabile globale
+  // protetta dal mutex, per essere processato nella funzione periodica.
+  pthread_mutex_lock(&flow_mutex);
+  flow_move.cmd = cmd;
+  flow_move.updated = true;
+  pthread_mutex_unlock(&flow_mutex);
   
-  // Update previous frame for the next iteration
+  // Aggiorna il frame precedente per la prossima iterazione
   memcpy(prev_gray, curr_gray, WIDTH * HEIGHT);
   
   return img;
+}
+
+/**
+ * @brief Periodic function per l'invio del comando tramite ABI.
+ *
+ * Questa funzione, chiamata periodicamente, controlla se è stato aggiornato
+ * un nuovo comando, lo invia tramite ABI e resetta il flag.
+ */
+void optical_flow_obs_periodic(void) {
+  flow_msg_t local_move;
+  pthread_mutex_lock(&flow_mutex);
+  local_move = flow_move; // Copia locale per minimizzare il tempo in sezione critica
+  if (flow_move.updated) {
+    flow_move.updated = false; // Reset del flag una volta prelevato
+  }
+  pthread_mutex_unlock(&flow_mutex);
+
+  if (local_move.updated) {
+    AbiSendMsgTCT_AP_Direct(TCT_FLOOR_DETECTION_ID, local_move.cmd, 0);
+  }
 }
 
 /**
@@ -200,14 +233,14 @@ static struct image_t *optical_flow_obs_func(struct image_t *img, uint8_t camera
  */
 void optical_flow_obs_init(void) {
   first_frame = 1;
-  // Register the optical flow callback with the camera device (using FLOOR_DET_CAMERA)
+  // Registra la funzione di callback dell'optical flow sul dispositivo della camera
   cv_add_to_device(&FLOOR_DET_CAMERA, optical_flow_obs_func, 0, 0);
   printf("Optical Flow Obstacle Detection Initialized\n");
 }
 
 /**
- * @brief Periodic function (not used in this implementation).
+ * @brief Periodic function (può essere chiamata da un task scheduler).
  */
-void optical_flow_obs_periodic(void) {
-  // No additional periodic processing required.
+void optical_flow_obs_periodic_wrapper(void) {
+  optical_flow_obs_periodic();
 }
