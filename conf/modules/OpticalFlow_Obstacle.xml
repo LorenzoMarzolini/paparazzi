@@ -1,0 +1,35 @@
+<!DOCTYPE module SYSTEM "module.dtd">
+
+<module name="OpticalFlow_Obstacle" dir="OpticalFlow_Obstacle">
+  <doc>
+    <description>
+      Optical Flow Obstacle Detection Module.
+      This module computes a simplified optical flow from consecutive camera frames
+      to detect obstacles based on flow magnitudes. It then sends an ABI command based
+      on which side (left or right) is more obstructed.
+    </description>
+    <!-- Define the camera to use. Ensure that FLOOR_DET_CAMERA is defined globally if needed -->
+    <define name="FLOOR_DET_CAMERA" value="front_camera" description="Video device to use"/>
+  </doc>
+  
+  <!-- Optional settings if you wish to adjust parameters; currently none are exposed -->
+  <settings>
+    <dl_settings>
+      <dl_settings name="OpticalFlow_Obstacle">
+        <!-- You can add dynamic settings here if needed -->
+      </dl_settings>
+    </dl_settings>
+  </settings>
+  
+  <header>
+    <file name="OpticalFlow_Obstacle.h"/>
+  </header>
+  
+  <init fun="optical_flow_obs_init()"/>
+  <!-- Periodic function is provided (even if empty) for potential future use -->
+  <periodic fun="optical_flow_obs_periodic()" freq="50"/>
+  
+  <makefile target="ap|nps">
+    <file name="OpticalFlow_Obstacle.c"/>
+  </makefile>
+</module>
