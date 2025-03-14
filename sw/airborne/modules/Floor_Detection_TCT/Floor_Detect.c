@@ -71,6 +71,7 @@ void floor_detect_periodic(void)
     floor_detect_reset();
     return;
   }
+  printf("%d", (int)navigation_state);
   switch (navigation_state)
   {
   case HOLD:
@@ -84,14 +85,17 @@ void floor_detect_periodic(void)
     break;
   
   case OBSTACLE_FOUND_LEFT:
-    guidance_h_set_heading_rate(RadOfDeg(15));
+    guidance_h_set_body_vel(0, 0);
+    guidance_h_set_heading_rate(-RadOfDeg(15));
     
     break;
   case OBSTACLE_FOUND_RIGHT:
-  guidance_h_set_heading_rate(-RadOfDeg(15));
+  guidance_h_set_body_vel(0, 0);
+  guidance_h_set_heading_rate(RadOfDeg(15));
     break;
   case OUT_OF_BOUNDS:
     guidance_h_set_body_vel(0, 0);
+    guidance_h_set_heading_rate(-RadOfDeg(15));
     break;
   case OUT_OF_BOUNDS_DELAY:
     guidance_h_set_body_vel(0, 0);

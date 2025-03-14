@@ -17,16 +17,12 @@ bool det_draw1 = FLOOR_DET_DRAW;
 bool det_draw2 = FLOOR_DET_DRAW2;
 
 
-//copilot
 bool visited[WIDTH][HEIGHT];
-
-// Function for flood-fill to find a cluster
 static int floodFill(uint8_t *buffer, uint8_t *new_buffer, int x, int y, short w, short h, bool write_to_new_buffer) {
   int cluster_size = 0;
-  int queue[HEIGHT * WIDTH][2];  // Queue for BFS
+  int queue[HEIGHT * WIDTH][2]; 
   int front = 0, rear = 0;
 
-  // Start flood-fill at (x, y)
   queue[rear][0] = x;
   queue[rear][1] = y;
   rear++;
@@ -40,14 +36,12 @@ static int floodFill(uint8_t *buffer, uint8_t *new_buffer, int x, int y, short w
       cluster_size++;
 
       if (write_to_new_buffer) {
-          new_buffer[cx * w + cy] = 255;  // Write to new buffer
+          new_buffer[cx * w + cy] = 255; 
           
       }
-
-      // Check 8 neighbors (including diagonals)
       int neighbors[8][2] = {
-          {cx - 1, cy}, {cx + 1, cy}, {cx, cy - 1}, {cx, cy + 1},      // Up, Down, Left, Right
-          {cx - 1, cy - 1}, {cx - 1, cy + 1}, {cx + 1, cy - 1}, {cx + 1, cy + 1} // Diagonals
+          {cx - 1, cy}, {cx + 1, cy}, {cx, cy - 1}, {cx, cy + 1},           
+          {cx - 1, cy - 1}, {cx - 1, cy + 1}, {cx + 1, cy - 1}, {cx + 1, cy + 1}
       };
 
       for (int i = 0; i < 8; i++) {
@@ -62,23 +56,18 @@ static int floodFill(uint8_t *buffer, uint8_t *new_buffer, int x, int y, short w
           }
       }
   }
-  printf("cluster size: %d\n", cluster_size);
   return cluster_size;
 }
 
-
-// Main function to find and isolate the largest cluster
 static void isolateLargestCluster(uint8_t *buffer, uint8_t *new_buffer, short w, short h) {
-    memset(visited, 0, sizeof(visited));  // Reset the visited array
-    printf("Start\n");
+    memset(visited, 0, sizeof(visited)); 
     int max_cluster_size = 0;
     int max_cluster_x = -1, max_cluster_y = -1;
 
-    // First pass: find the largest cluster
     for (short i = 0; i < h; i++) {
         for (short j = 0; j < w; j++) {
             if (!visited[i][j] && buffer[i * w + j] == 255) {
-                int cluster_size = floodFill(buffer, NULL ,i, j, w, h, false);  // Find cluster size
+                int cluster_size = floodFill(buffer, NULL ,i, j, w, h, false); 
                 if (cluster_size > max_cluster_size) {
                     max_cluster_size = cluster_size;
                     max_cluster_x = i;
@@ -87,20 +76,15 @@ static void isolateLargestCluster(uint8_t *buffer, uint8_t *new_buffer, short w,
             }
         }
     }
-    printf("end\n");
-    // Reset visited array for the second pass
     memset(visited, 0, sizeof(visited));
-    memset(new_buffer, 0, w * h);  // Clear the new buffer
+    memset(new_buffer, 0, w * h); 
 
-    // Second pass: extract the largest cluster
     if (max_cluster_x != -1 && max_cluster_y != -1) {
         floodFill(buffer, new_buffer, max_cluster_x, max_cluster_y, w, h, true);
     }
 
 }
 
-
-// not copilot
 static pthread_mutex_t mutex;
 static struct msg_det{
   uint8_t cmd;
@@ -110,8 +94,18 @@ static struct msg_det{
 uint8_t Buffer_2[HEIGHT*WIDTH];
 uint8_t Buffer_3[HEIGHT*WIDTH];
 uint8_t Buffer_4[HEIGHT*WIDTH];
-
+bool right = false;
+bool left = false;
+bool spin = false;
+bool gap = false;
+uint8_t cmd = 0;
 struct msg_det move_global[1];
+uint8_t hort_check[WIDTH];
+uint8_t vert_check[WIDTH];
+int left_sum = 0;
+int right_sum = 0;;
+
+
 static struct image_t *g4_floor_det_func(struct image_t *img, uint8_t camera_id __attribute__((unused)))
 {  
   short h = img->h;
@@ -138,17 +132,86 @@ static struct image_t *g4_floor_det_func(struct image_t *img, uint8_t camera_id 
   }
   isolateLargestCluster(Buffer_2, Buffer_3, w, h);
 
+  if(true){
+  int middle = h / 2; 
+  int slice = (int)(h / 10) / 2; 
+
+  spin = false;
+  left = false;
+  right = false;
+  gap = false;
+  for (int y = 0; y < h; y++) {
+      hort_check[y] = Buffer_3[y * w + (h - 1)];
+  }
+  int active_pixels = 0;
+  for (int y = 0; y < h; y++) {
+      if (hort_check[y] > 0) {
+          active_pixels++;
+      }
+  }
+  if (active_pixels < 30) {
+      spin = true;
+  }
+  if(!spin){
+    for (int x = 0; x < h; x++) {
+      vert_check[x] = 0;
+  }
+
+  for (int x = 0; x < h; x++) {
+      for (int y = 0; y < w; y++) {
+          if (Buffer_3[x * w + y] > 0) {
+              vert_check[x] = 255; 
+              break;               
+          }
+      }
+  }
+  left_sum = 0;
+  right_sum = 0;
+  for (int x = 0; x < middle; x++) {
+    if (vert_check[x] > 0) {
+        left_sum++;
+    }
+  }
+  for (int x = middle; x < h; x++) {
+      if (vert_check[x] > 0) {
+          right_sum++;
+      }
+  }
+
+  for (int x = middle - slice; x <= middle + slice; x++) {
+    if (x < 0 || x >= h) continue; 
+
+    if (vert_check[x] == 0) { 
+        gap = true;
+        break;
+    }
+}
+if(gap){
+    printf("Left:%d Right:%d", left_sum, right_sum);
+    if (right_sum > left_sum) {
+        right = true;
+    } else if (left_sum > right_sum) {
+        left = true;
+    }
+    else {right = true;}
+  }
+    }
+  }
+  cmd = 1;
+  if(spin){cmd = 4;}
+  else {
+    if (left){ cmd = 2;}
+    else if (right){cmd = 3;};
+  }
   pthread_mutex_lock(&mutex);
-  move_global[0].cmd = 1;
+  move_global[0].cmd = cmd;
   move_global[0].updated = true;
   pthread_mutex_unlock(&mutex);
-
   if(det_draw1){
     uint8_t *source2 = (uint8_t *)img->buf;
     uint8_t *dest2 = Buffer_2;
     for(short i = 0; i<h; i++){
       for(short j = 0; j<w; j+=2){
-        // check if in image or not
         source2[1] = dest2[0];
         source2[0] = 128;
         source2[3] = dest2[1];
@@ -163,7 +226,6 @@ static struct image_t *g4_floor_det_func(struct image_t *img, uint8_t camera_id 
     uint8_t *dest2 = Buffer_3;
     for(short i = 0; i<h; i++){
       for(short j = 0; j<w; j+=2){
-        // check if in image or not
         source2[1] = dest2[0];
         source2[0] = 128;
         source2[3] = dest2[1];
@@ -173,9 +235,7 @@ static struct image_t *g4_floor_det_func(struct image_t *img, uint8_t camera_id 
       }
     }
   }
-  
-
-  return img; // func did not make a new image
+  return img;
 }
 
 void g4_floor_det_init(void)
