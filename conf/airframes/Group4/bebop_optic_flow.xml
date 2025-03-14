@@ -91,7 +91,7 @@
       <define name="HEIGHT" value="240"/>
     </module>
     
-    <module name="Obstacle_Movement">
+    <module name="ObstacleMovement">
       <define name="oag_max_speed" value="1.0" description="Maximum forward speed"/>
       <define name="oag_heading_rate" value="5.0" description="Heading rate used for avoidance maneuvers"/>
     </module>
