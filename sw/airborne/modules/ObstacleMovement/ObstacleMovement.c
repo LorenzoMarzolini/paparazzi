@@ -19,7 +19,7 @@ enum navigation_state_t {
     SPIN          // Spin in place
 };
 
-static enum navigation_state_t navigation_state = SAFE;
+enum navigation_state_t navigation_state = HOLD;
 
 void obstacle_move_reset(void)
 {
@@ -27,7 +27,11 @@ void obstacle_move_reset(void)
   guidance_h_set_heading_rate(RadOfDeg(0));
 }
 
-static abi_event obstacle_movement_ev;
+#ifndef TCT_FLOOR_DETECTION_ID
+#error This module requires a camera, as such you have to define TCT_FLOOR_DETECTION_ID to the orange filter
+#error Please define TCT_FLOOR_DETECTION_ID to be COLOR_OBJECT_DETECTION1_ID or COLOR_OBJECT_DETECTION2_ID in your airframe
+#endif
+static abi_event floor_detection_ev;
 
 /**
  * @brief Listener for obstacle detection commands.
