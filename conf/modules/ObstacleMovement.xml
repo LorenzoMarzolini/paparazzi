@@ -13,7 +13,7 @@
   <!-- Optional dynamic settings for movement parameters -->
   <settings>
     <dl_settings>
-      <dl_settings name="OpticalFlow_Obstacle">
+      <dl_settings name="ObstacleMovement">
         <dl_setting var="oag_heading_rate" min="0" step="5" max="45" unit="deg"/>
       </dl_settings>
     </dl_settings>
