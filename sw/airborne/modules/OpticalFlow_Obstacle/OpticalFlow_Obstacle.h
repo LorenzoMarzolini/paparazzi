@@ -12,6 +12,10 @@
 #ifndef OPTICAL_FLOW_OBSTACLE_H
 #define OPTICAL_FLOW_OBSTACLE_H
 
+
+extern float oag_max_speed; 
+extern float oag_heading_rate;
+
 // Initialize the optical flow obstacle detection module
 extern void optical_flow_obs_init(void);
 
