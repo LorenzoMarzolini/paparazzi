@@ -79,8 +79,7 @@ void obstacle_move_init(void) {
  */
 void obstacle_move_periodic(void) {
     if (guidance_h.mode != GUIDANCE_H_MODE_GUIDED) {
-        guidance_h_set_body_vel(0, 0);
-        guidance_h_set_heading_rate(RadOfDeg(0));
+        obstacle_move_reset();
         return;
     }
     
