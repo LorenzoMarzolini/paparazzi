@@ -22,4 +22,6 @@ extern void optical_flow_obs_init(void);
 // Periodic function (if needed) to process frames; the optical flow is mainly computed in the camera callback.
 extern void optical_flow_obs_periodic(void);
 
+void optical_flow_obs_reset(void);
+
 #endif // OPTICAL_FLOW_OBSTACLE_H
