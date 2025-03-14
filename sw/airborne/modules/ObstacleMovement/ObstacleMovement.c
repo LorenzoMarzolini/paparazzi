@@ -26,7 +26,7 @@ enum navigation_state_t navigation_state = HOLD;
 #error This module requires a camera, as such you have to define TCT_FLOOR_DETECTION_ID to the orange filter
 #error Please define TCT_FLOOR_DETECTION_ID to be COLOR_OBJECT_DETECTION1_ID or COLOR_OBJECT_DETECTION2_ID in your airframe
 #endif
-static abi_event floor_detection_ev;
+static abi_event obstacle_movement_ev;
 
 /**
  * @brief Listener for obstacle detection commands.
