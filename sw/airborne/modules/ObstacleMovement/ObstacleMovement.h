@@ -13,8 +13,6 @@
 #define OBSTACLE_MOVEMENT_H
 
 // Declare global variables to be modified via settings
-#define oag_max_speed 10.0f
-#define oag_heading_rate 5.0f
 
 // Initialize the obstacle movement module
 extern void obstacle_move_init(void);
