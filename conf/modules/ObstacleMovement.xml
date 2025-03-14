@@ -18,6 +18,10 @@
       </dl_settings>
     </dl_settings>
   </settings>
+
+  <dep>
+    <depends>video_thread</depends>
+  </dep>
   
   <header>
     <file name="ObstacleMovement.h"/>
