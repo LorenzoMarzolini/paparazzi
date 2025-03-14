@@ -18,5 +18,6 @@ extern float oag_heading_rate;
 
 extern void obstacle_move_init(void);
 extern void obstacle_move_periodic(void);
+void obstacle_move_reset(void);
 
 #endif // OBSTACLE_MOVEMENT_H
