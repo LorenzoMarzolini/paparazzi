@@ -18,10 +18,6 @@
     </dl_settings>
   </settings>
   
- <dep>
-    <depends>OpticalFlow_Obstacle</depends>
-  </dep>
-  
   <header>
     <file name="ObstacleMovement.h"/>
   </header>
