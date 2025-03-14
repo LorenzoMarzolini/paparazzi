@@ -1,5 +1,5 @@
 #include "OpticalFlow_Obstacle.h"
-#include "modules/computer_vision/cv.h"  // Assumes existence of image_t and cv_add_to_device
+#include "modules/computer_vision/cv.h"
 #include "modules/core/abi.h"
 #include <stdio.h>
 #include <stdlib.h>
