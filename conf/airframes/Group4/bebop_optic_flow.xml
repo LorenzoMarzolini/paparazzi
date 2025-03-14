@@ -92,8 +92,7 @@
     </module>
     
     <module name="ObstacleMovement">
-      <define name="oag_max_speed" value="1.0" description="Maximum forward speed"/>
-      <define name="oag_heading_rate" value="5.0" description="Heading rate used for avoidance maneuvers"/>
+      <define name="TCT_FLOOR_DETECTION_ID" value="TCT_AP_Direct_ID1"/>
     </module>
     
     <module name="video_rtp_stream">
