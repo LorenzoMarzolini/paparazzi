@@ -16,7 +16,6 @@
 #include "state.h"
 #include "modules/core/abi.h"
 
-oag_max_speed = 1.0; 
 oag_heading_rate = 5.0;
 
 // Navigation state enum definitions
@@ -89,7 +88,7 @@ void obstacle_move_periodic(void) {
             guidance_h_set_heading_rate(RadOfDeg(0));
             break;
         case SAFE:
-            guidance_h_set_body_vel(oag_max_speed, 0);
+            guidance_h_set_body_vel(oag_heading_rate, 0);
             guidance_h_set_heading_rate(RadOfDeg(0));
             break;
         case AVOID_LEFT:
