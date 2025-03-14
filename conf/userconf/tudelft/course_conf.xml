@@ -23,7 +23,7 @@
   />
   <aircraft
    name="bebop_obstacle_avoid_guided"
-   ac_id="43"
+   ac_id="44"
    airframe="airframes/tudelft/bebop_course_obstacleavoid_guided.xml"
    radio="radios/dummy.xml"
    telemetry="telemetry/default_rotorcraft.xml"
