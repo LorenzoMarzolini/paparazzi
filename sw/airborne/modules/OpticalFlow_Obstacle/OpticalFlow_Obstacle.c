@@ -6,7 +6,7 @@
 #include <stdint.h>
 #include <math.h>
 #include <string.h>
-#include <pthread.h>  // Necessario per la gestione dei mutex
+#include <pthread.h>  // For mutex handling
 
 // Define parameters (adjust as needed)
 #define WINDOW_SIZE 6
@@ -30,25 +30,25 @@ typedef struct {
   float v;
 } flow_vector_t;
 
-// Global static variables for optical flow
+// Global static variables for optical flow processing
 static uint8_t prev_gray[HEIGHT * WIDTH];
 static int first_frame = 1;
 static flow_vector_t flow_vectors[MAX_FLOW_VECTORS];
 static int flow_count = 0;
 
-// Struttura per la comunicazione del comando, simile a quella del prof.
+// Structure for message passing with flow command
 typedef struct {
   uint8_t cmd;
   bool updated;
 } flow_msg_t;
 
-// Variabile globale per il comando e mutex per la sincronizzazione
+// Global variable for the command and mutex for synchronization
 static flow_msg_t flow_move = {0, false};
 static pthread_mutex_t flow_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 /**
- * @brief Convert the image to grayscale.
- * For a YUV422 image, the Y channel is extracted.
+ * @brief Converts the image to grayscale.
+ * For a YUV422 image, extracts the Y channel.
  */
 static void convert_to_gray(uint8_t *src, uint8_t *gray, int w, int h) {
   int num_pixels = w * h;
@@ -65,7 +65,7 @@ static void convert_to_gray(uint8_t *src, uint8_t *gray, int w, int h) {
 }
 
 /**
- * @brief Compute horizontal and vertical gradients using central differences.
+ * @brief Computes horizontal and vertical gradients using central differences.
  */
 static void compute_gradients(uint8_t *gray, int w, int h, float *Ix, float *Iy) {
   int x, y;
@@ -79,7 +79,7 @@ static void compute_gradients(uint8_t *gray, int w, int h, float *Ix, float *Iy)
 }
 
 /**
- * @brief Compute optical flow using a simplified Lucas-Kanade method on a grid.
+ * @brief Computes optical flow using a simplified Lucas-Kanade method on a grid.
  */
 static void compute_optical_flow(uint8_t *prev, uint8_t *curr, int w, int h) {
   float Ix[HEIGHT * WIDTH];
@@ -126,7 +126,7 @@ static void compute_optical_flow(uint8_t *prev, uint8_t *curr, int w, int h) {
 }
 
 /**
- * @brief Detect obstacles by comparing the average optical flow magnitude
+ * @brief Detects obstacles by comparing the average optical flow magnitude
  * on the left and right halves of the image.
  *
  * @param w Image width.
@@ -158,7 +158,7 @@ static void detect_obstacles(int w, int h, int *obstacle_left, int *obstacle_rig
  * @brief Main optical flow processing function called by the camera.
  *
  * Processes the current frame, computes optical flow relative to the previous frame,
- * detects obstacles, and updates il comando da inviare.
+ * detects obstacles, and updates the command to be sent.
  *
  * @param img Pointer to the current image.
  * @param camera_id Unused camera identifier.
@@ -182,10 +182,10 @@ static struct image_t *optical_flow_obs_func(struct image_t *img, uint8_t camera
   detect_obstacles(WIDTH, HEIGHT, &obs_left, &obs_right);
   
   // Decide command based on free space:
-  // - SAFE (1) se entrambi i lati sono liberi
-  // - Se solo il lato sinistro ha ostacoli -> gira a destra (3)
-  // - Se solo il lato destro ha ostacoli -> gira a sinistra (2)
-  // - Se entrambi i lati hanno ostacoli -> gira sul posto (4)
+  // - SAFE (command 1) if both sides are clear
+  // - If only the left side has obstacles -> turn right (command 3)
+  // - If only the right side has obstacles -> turn left (command 2)
+  // - If both sides have obstacles -> spin in place (command 4)
   uint8_t cmd = 1; // SAFE by default
   if (obs_left && !obs_right) {
     cmd = 3; // Turn right
@@ -195,31 +195,31 @@ static struct image_t *optical_flow_obs_func(struct image_t *img, uint8_t camera
     cmd = 4; // Spin in place
   }
   
-  // Invece di inviare direttamente il comando, lo memorizziamo in una variabile globale
-  // protetta dal mutex, per essere processato nella funzione periodica.
+  // Instead of sending the command directly, store it in a global variable
+  // protected by a mutex, to be processed by the periodic function.
   pthread_mutex_lock(&flow_mutex);
   flow_move.cmd = cmd;
   flow_move.updated = true;
   pthread_mutex_unlock(&flow_mutex);
   
-  // Aggiorna il frame precedente per la prossima iterazione
+  // Update the previous frame for the next iteration
   memcpy(prev_gray, curr_gray, WIDTH * HEIGHT);
   
   return img;
 }
 
 /**
- * @brief Periodic function per l'invio del comando tramite ABI.
+ * @brief Periodic function for sending the command via ABI.
  *
- * Questa funzione, chiamata periodicamente, controlla se è stato aggiornato
- * un nuovo comando, lo invia tramite ABI e resetta il flag.
+ * This function, called periodically (e.g., by a task scheduler), checks if a new
+ * command is available, sends it via ABI, and resets the update flag.
  */
 void optical_flow_obs_periodic(void) {
   flow_msg_t local_move;
   pthread_mutex_lock(&flow_mutex);
-  local_move = flow_move; // Copia locale per minimizzare il tempo in sezione critica
+  local_move = flow_move; // Local copy to minimize time in critical section
   if (flow_move.updated) {
-    flow_move.updated = false; // Reset del flag una volta prelevato
+    flow_move.updated = false; // Reset update flag after reading
   }
   pthread_mutex_unlock(&flow_mutex);
 
@@ -229,18 +229,11 @@ void optical_flow_obs_periodic(void) {
 }
 
 /**
- * @brief Initialize the optical flow obstacle detection module.
+ * @brief Initializes the optical flow obstacle detection module.
  */
 void optical_flow_obs_init(void) {
   first_frame = 1;
-  // Registra la funzione di callback dell'optical flow sul dispositivo della camera
+  // Register the optical flow callback with the camera device
   cv_add_to_device(&FLOOR_DET_CAMERA, optical_flow_obs_func, 0, 0);
   printf("Optical Flow Obstacle Detection Initialized\n");
-}
-
-/**
- * @brief Periodic function (può essere chiamata da un task scheduler).
- */
-void optical_flow_obs_periodic_wrapper(void) {
-  optical_flow_obs_periodic();
 }
