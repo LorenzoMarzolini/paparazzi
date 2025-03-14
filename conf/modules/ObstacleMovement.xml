@@ -10,7 +10,6 @@
     <define name="TCT_CAMERA_DETECTION_ID" value="ABI_BROADCAST" description="which VISUAL_DETECTION message to recieve for orange pole detection."/>
   </doc>
   
-  <!-- Optional dynamic settings for movement parameters -->
   <settings>
     <dl_settings>
       <dl_settings name="ObstacleMovement">
