@@ -24,7 +24,7 @@
   <aircraft
    name="bebop_obstacle_avoid_optic_flow"
    ac_id="54"
-   airframe="airframes/tudelft/bebop_course_obstacleavoid_guided.xml"
+   airframe="airframes/Group4/bebop_optic_flow.xml"
    radio="radios/dummy.xml"
    telemetry="telemetry/default_rotorcraft.xml"
    flight_plan="flight_plans/tudelft/course_obstacleavoid_cyberzoo_guided.xml"
