@@ -12,11 +12,11 @@
 #ifndef OBSTACLE_MOVEMENT_H
 #define OBSTACLE_MOVEMENT_H
 
-// Declare global variables to be modified via settings
 
-// Initialize the obstacle movement module
+extern float oag_max_speed; 
+extern float oag_heading_rate;
+
 extern void obstacle_move_init(void);
-// Periodically update the drone's movement based on navigation state
 extern void obstacle_move_periodic(void);
 
 #endif // OBSTACLE_MOVEMENT_H
