@@ -16,7 +16,7 @@
   <settings>
     <dl_settings>
       <dl_settings name="OpticalFlow_Obstacle">
-        <!-- You can add dynamic settings here if needed -->
+        <dl_setting var="oag_heading_rate" min="0" step="5" max="45" unit="rad" alt_unit="deg"/>
       </dl_settings>
     </dl_settings>
   </settings>
