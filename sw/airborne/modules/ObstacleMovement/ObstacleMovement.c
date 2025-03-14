@@ -16,6 +16,8 @@
 #include "state.h"
 #include "modules/core/abi.h"
 
+extern float oag_max_speed; 
+extern float oag_heading_rate;
 // Navigation state enum definitions
 enum navigation_state_t {
     HOLD,
