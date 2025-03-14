@@ -11,7 +11,10 @@
     <!-- Define the camera to use. Ensure that FLOOR_DET_CAMERA is defined globally if needed -->
     <define name="TCT_CAMERA_DETECTION_ID" value="ABI_BROADCAST" description="which VISUAL_DETECTION message to recieve for orange pole detection."/>
   </doc>
-  
+
+  <dep>
+    <depends>video_thread</depends>
+  </dep>
   
   <header>
     <file name="OpticalFlow_Obstacle.h"/>
