@@ -21,11 +21,6 @@ enum navigation_state_t {
 
 enum navigation_state_t navigation_state = HOLD;
 
-void obstacle_move_reset(void)
-{
-  guidance_h_set_body_vel(0, 0);
-  guidance_h_set_heading_rate(RadOfDeg(0));
-}
 
 #ifndef TCT_FLOOR_DETECTION_ID
 #error This module requires a camera, as such you have to define TCT_FLOOR_DETECTION_ID to the orange filter
@@ -79,7 +74,8 @@ void obstacle_move_init(void) {
  */
 void obstacle_move_periodic(void) {
     if (guidance_h.mode != GUIDANCE_H_MODE_GUIDED) {
-        obstacle_move_reset();
+        guidance_h_set_body_vel(0, 0);
+        guidance_h_set_heading_rate(RadOfDeg(0));
         return;
     }
     
