@@ -9,7 +9,15 @@
       on which side (left or right) is more obstructed.
     </description>
     <!-- Define the camera to use. Ensure that FLOOR_DET_CAMERA is defined globally if needed -->
-    <define name="TCT_CAMERA_DETECTION_ID" value="ABI_BROADCAST" description="which VISUAL_DETECTION message to recieve for orange pole detection."/>
+    <define name="FLOOR_DET_CAMERA" value="front_camera|bottom_camera" description="Video device to use"/>
+    <define name="FLOOR_DETECTOR_FPS" value="0" description="Desired FPS (0: camera rate)"/>
+    <define name="COLOR_OBJECT_DETECTOR_LUM_MIN1" value="0" description="Filter 1 min luminance"/>
+    <define name="COLOR_OBJECT_DETECTOR_LUM_MAX1" value="0" description="Filter 1 max luminance"/>
+    <define name="COLOR_OBJECT_DETECTOR_CB_MIN1" value="0" description="Filter 1 min blue chroma"/>
+    <define name="COLOR_OBJECT_DETECTOR_CB_MAX1" value="0" description="Filter 1 max blue chroma"/>
+    <define name="COLOR_OBJECT_DETECTOR_CR_MIN1" value="0" description="Filter 1 min red chroma"/>
+    <define name="COLOR_OBJECT_DETECTOR_CR_MAX1" value="0" description="Filter 1 max red chroma"/>
+    <define name="COLOR_OBJECT_DETECTOR_DRAW1" value="FALSE|TRUE" description="Whether or not to draw on image"/>
   </doc>
 
   <dep>
