@@ -1,4 +1,4 @@
-#include <stdio.h>
+#include <stdint.h>
 #include "modules/computer_vision/cv.h"
 
 #ifndef OPTICAL_FLOW_OBSTACLE_H
