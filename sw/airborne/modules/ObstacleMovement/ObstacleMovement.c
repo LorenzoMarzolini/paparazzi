@@ -15,7 +15,7 @@
 
 // Parametri di guida
 float oag_max_speed = 1.0;
-float oag_default_heading_rate_deg = 0.0; // Impostato dinamicamente dal comando
+float oag_heading_rate = 5.0; // Impostato dinamicamente dal comando
 
 // Nuova struttura per il comando ricevuto
 typedef struct {
