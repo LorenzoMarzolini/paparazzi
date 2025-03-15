@@ -225,9 +225,9 @@ void optical_flow_obs_periodic(void) {
   }
   pthread_mutex_unlock(&flow_mutex);
 
-  if (local_move.updated) {
-    AbiSendMsgTCT_AP_Direct(TCT_FLOOR_DETECTION_ID, local_move.cmd,  (int16_t)0);
-  }
+  //if (local_move.updated) {
+  //  AbiSendMsgTCT_AP_Direct(TCT_FLOOR_DETECTION_ID, local_move.cmd,  (int16_t)0);
+  // }
 }
 
 /**
