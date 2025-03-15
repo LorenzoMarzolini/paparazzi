@@ -65,7 +65,7 @@ static void obstacle_movement_listener(uint8_t __attribute__((unused)) sender_id
  */
 void obstacle_move_init(void) {
     printf("Obstacle Movement Listener Setup\n");
-    // AbiBindMsgTCT_AP_Direct(TCT_FLOOR_DETECTION_ID, &obstacle_movement_ev, obstacle_movement_listener);
+    AbiBindMsgTCT_AP_Direct(TCT_FLOOR_DETECTION_ID, &obstacle_movement_ev, obstacle_movement_listener);
     printf("Obstacle Movement Listener Ready\n");
 }
 
