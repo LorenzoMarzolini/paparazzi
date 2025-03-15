@@ -8,6 +8,7 @@
  * This module receives obstacle detection commands via ABI and sets the drone's guidance
  * to avoid obstacles by turning left or right based on free space.
  */
+#include <stdio.h>
 
 #ifndef OBSTACLE_MOVEMENT_H
 #define OBSTACLE_MOVEMENT_H
