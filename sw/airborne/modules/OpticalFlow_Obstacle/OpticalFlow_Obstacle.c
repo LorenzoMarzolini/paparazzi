@@ -5,8 +5,10 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <math.h>
+#include <pthread.h>
+#include <stdbool.h>
 #include <string.h>
-#include <pthread.h>  // For mutex handling
+#include "modules/computer_vision/lib/vision/image.h"
 
 // Define parameters (adjust as needed)
 #define WINDOW_SIZE 6
