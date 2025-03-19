@@ -1,13 +1,3 @@
-/* obstacle_movement.c
- *
- * This module receives obstacle detection commands via ABI and updates the drone's guidance.
- * Commands are mapped as follows:
- *   1: SAFE (no obstacles)
- *   2: Turn left (obstacle detected on right)
- *   3: Turn right (obstacle detected on left)
- *   4: Spin in place (obstacles detected on both sides)
- */
-
 #include "ObstacleMovement.h"
 #include <stdio.h>
 #include "firmwares/rotorcraft/guidance/guidance_h.h"
@@ -15,22 +5,25 @@
 #include "state.h"
 #include "modules/core/abi.h"
 
-float oag_max_speed = 1.0;
+/* Guidance parameters: maximum speed and yaw rate (in degrees) */
+float oag_max_speed = 0.7;
 float oag_heading_rate = 5.0;
 
-// Navigation state definitions.
+/* Definition of navigation states.
+ * These states are updated by the ABI listener based on the commands sent by the optical flow module.
+ */
 enum navigation_state_t {
     HOLD,
     SAFE,
-    AVOID_LEFT,   // Turn left
-    AVOID_RIGHT,  // Turn right
-    SPIN          // Spin in place
+    AVOID_LEFT,   // Turn left (for obstacle detected on the right side)
+    AVOID_RIGHT,  // Turn right (for obstacle detected on the left side)
+    SPIN          // Spin in place (obstacles detected on both sides)
 };
 
 enum navigation_state_t navigation_state = HOLD;
 
 #ifndef TCT_FLOOR_DETECTION_ID
-#error Define TCT_FLOOR_DETECTION_ID (e.g., COLOR_OBJECT_DETECTION1_ID) in your airframe configuration.
+#error Define TCT_FLOOR_DETECTION_ID (for example, COLOR_OBJECT_DETECTION1_ID) in the airframe configuration.
 #endif
 
 static abi_event obstacle_movement_ev;
@@ -38,12 +31,12 @@ static abi_event obstacle_movement_ev;
 /* 
  * Function: obstacle_movement_listener
  * --------------------------------------
- * ABI listener that maps received commands to navigation states.
- * Commands:
+ * ABI listener that maps the received command (via the optical flow module) to the navigation state.
+ * Command mapping:
  *   1 -> SAFE
- *   2 -> AVOID_LEFT
- *   3 -> AVOID_RIGHT
- *   4 -> SPIN
+ *   2 -> AVOID_LEFT   (obstacle detected on the right side: turn left)
+ *   3 -> AVOID_RIGHT  (obstacle detected on the left side: turn right)
+ *   4 -> SPIN         (obstacles detected on both sides: spin)
  */
 static void obstacle_movement_listener(uint8_t __attribute__((unused)) sender_id,
                                          int8_t setting,
@@ -70,7 +63,8 @@ static void obstacle_movement_listener(uint8_t __attribute__((unused)) sender_id
 /* 
  * Function: obstacle_move_init
  * ----------------------------
- * Initializes the obstacle movement module by binding the ABI listener.
+ * Initializes the obstacle movement management module by binding the ABI listener.
+ * This function should be called during system initialization.
  */
 void obstacle_move_init(void) {
     printf("Obstacle Movement Listener Setup\n");
@@ -81,38 +75,37 @@ void obstacle_move_init(void) {
 /* 
  * Function: obstacle_move_periodic
  * ----------------------------------
- * Periodically updates the drone's guidance based on the current navigation state.
+ * Periodic function that updates the drone's guidance based on the current navigation state.
+ * It is called at regular intervals (e.g., by a scheduler) to apply the commands.
  */
 void obstacle_move_periodic(void) {
     if (guidance_h.mode != GUIDANCE_H_MODE_GUIDED) {
+        /* If the drone is not in guided mode, stop movement */
         guidance_h_set_body_vel(0, 0);
         guidance_h_set_heading_rate(RadOfDeg(0));
         return;
     }
     
+    /* Set the speed and yaw rate based on the received state */
     switch (navigation_state) {
-        case HOLD:
-            guidance_h_set_body_vel(0, 0);
-            guidance_h_set_heading_rate(RadOfDeg(0));
-            break;
         case SAFE:
             guidance_h_set_body_vel(oag_max_speed, 0);
             guidance_h_set_heading_rate(RadOfDeg(0));
             break;
         case AVOID_LEFT:
-            // Turn left: positive heading rate
+            /* Turn left (positive heading rate) */
             guidance_h_set_body_vel(0, 0);
-            guidance_h_set_heading_rate(RadOfDeg(15));
+            guidance_h_set_heading_rate(RadOfDeg(20));
             break;
         case AVOID_RIGHT:
-            // Turn right: negative heading rate
+            /* Turn right (negative heading rate) */
             guidance_h_set_body_vel(0, 0);
-            guidance_h_set_heading_rate(-RadOfDeg(15));
+            guidance_h_set_heading_rate(-RadOfDeg(20));
             break;
         case SPIN:
-            // Spin in place: higher heading rate
+            /* Execute a spin in place */
             guidance_h_set_body_vel(0, 0);
-            guidance_h_set_heading_rate(RadOfDeg(30));
+            guidance_h_set_heading_rate(RadOfDeg(180));
             break;
         default:
             guidance_h_set_body_vel(0, 0);
