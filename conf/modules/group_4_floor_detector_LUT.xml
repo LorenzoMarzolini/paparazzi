@@ -1,6 +1,6 @@
 <!DOCTYPE module SYSTEM "module.dtd">
 
-<module name="group_4_floor_detector" dir="computer_vision">
+<module name="group_4_floor_detector_LUT" dir="computer_vision">
   <doc>
     <description>Color Object Detector
     Detects an object by a continuous color. Optionally draws on image.
@@ -40,6 +40,6 @@
   <init fun="g4_floor_det_init()"/>
   <periodic fun="g4_floor_det_periodic()" freq="50"/>
   <makefile target="ap|nps">
-    <file name="group_4_floor_detector_original.c"/>
+    <file name="group_4_floor_detector_lookup.c"/>
   </makefile>
 </module>

@@ -85,7 +85,7 @@
       <define name="COLOR_OBJECT_DETECTOR_DRAW2" value="1"/>
     </module>
     -->
-    <module name="group_4_floor_detector">
+    <module name="group_4_floor_detector_yuv">
       <define name="FLOOR_DET_CAMERA" value="front_camera"/>
       <define name="FLOOR_DETECTOR_FPS" value="0"/>
       <define name="FLOOR_DET_DRAW" value="0"/>

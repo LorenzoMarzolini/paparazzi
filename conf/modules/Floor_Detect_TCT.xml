@@ -10,7 +10,8 @@
   <settings>
     <dl_settings>
       <dl_settings name="Floor_Detection_TCT">
-         <dl_setting var="oag_heading_rate" min="0" step="5" max="45" unit="rad" alt_unit="deg"/>
+         <dl_setting var="oag_heading_rate" min="0.0" step="5.0" max="45.0" unit="rad" alt_unit="deg"/>
+         <dl_setting var="oag_max_speed" min="0" step="0.5" max="5" unit="m/s" alt_unit="m/s"/>
       </dl_settings>
     </dl_settings>
   </settings>
