@@ -7,6 +7,7 @@
 #include "modules/computer_vision/lib/vision/image.h"
 #include "group_4_floor_detector.h"
 #include "modules/core/abi.h"
+#include "state.h"
 
 
 uint8_t R_lim = 100;
@@ -40,8 +41,7 @@ static int floodFill(uint8_t *buffer, uint8_t *new_buffer, int x, int y, short w
           
       }
       int neighbors[8][2] = {
-          {cx - 1, cy}, {cx + 1, cy}, {cx, cy - 1}, {cx, cy + 1},           
-          {cx - 1, cy - 1}, {cx - 1, cy + 1}, {cx + 1, cy - 1}, {cx + 1, cy + 1}
+          {cx - 1, cy}, {cx + 1, cy}, {cx, cy - 1}, {cx, cy + 1}
       };
 
       for (int i = 0; i < 8; i++) {
@@ -134,8 +134,14 @@ static struct image_t *g4_floor_det_func(struct image_t *img, uint8_t camera_id 
   left = false;
   right = false;
   gap = false;
+
+  float pitch_angle = stateGetNedToBodyEulers_f()->theta;
+  float scaling_factor = 50; 
+  int offset = (int)(pitch_angle * scaling_factor);
+  if (offset > 0){offset = 0;};
+  if (offset < -w/2){offset = w/2;};
   for (int y = 0; y < h; y++) {
-      hort_check[y] = Buffer_3[y * w + (h - 1)];
+      hort_check[y] = Buffer_3[y * w + (h - 1) + offset];
   }
   int active_pixels = 0;
   for (int y = 0; y < h; y++) {
@@ -143,7 +149,7 @@ static struct image_t *g4_floor_det_func(struct image_t *img, uint8_t camera_id 
           active_pixels++;
       }
   }
-  if (active_pixels < 30) {
+  if (active_pixels < slice) {
       spin = true;
   }
   if(!spin){
@@ -154,7 +160,7 @@ static struct image_t *g4_floor_det_func(struct image_t *img, uint8_t camera_id 
   for (int x = 0; x < h; x++) {
       for (int y = 0; y < w; y++) {
           if (Buffer_3[x * w + y] > 0) {
-              vert_check[x] = 255; 
+              vert_check[x] = (y+1 > 255) ? 255 : y+1; 
               break;               
           }
       }
@@ -178,6 +184,10 @@ static struct image_t *g4_floor_det_func(struct image_t *img, uint8_t camera_id 
     if (vert_check[x] == 0) { 
         gap = true;
         break;
+    }
+    else if (vert_check[x] > w/2){
+      spin = true;
+      break;
     }
 }
 if(gap){

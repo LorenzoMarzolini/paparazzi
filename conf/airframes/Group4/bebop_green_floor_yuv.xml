@@ -72,7 +72,7 @@
     </module-->
     <module name="video_capture">
       <define name="VIDEO_CAPTURE_CAMERA" value="front_camera"/>
-      <define name="VIDEO_CAPTURE_FPS" value="10"/>
+      <define name="VIDEO_CAPTURE_FPS" value="20"/>
     </module>
     <!--
     <module name="cv_detect_color_object">
@@ -87,15 +87,16 @@
     -->
     <module name="group_4_floor_detector_yuv">
       <define name="FLOOR_DET_CAMERA" value="front_camera"/>
-      <define name="FLOOR_DETECTOR_FPS" value="0"/>
+      <define name="FLOOR_DETECTOR_FPS" value="15"/>
       <define name="FLOOR_DET_DRAW" value="0"/>
-      <define name="FLOOR_DET_DRAW2" value="1"/>
+      <define name="FLOOR_DET_DRAW2" value="0"/>
       <define name="HEIGHT" value="240"/>
-      <define name="WIDTH" value="520"/>
+      <define name="WIDTH" value="260"/>
     </module>
     
     <module name="Floor_Detect_TCT">
       <define name="TCT_FLOOR_DETECTION_ID" value="TCT_AP_Direct_ID1"/>
+      <define name="WAIT_COUNTER_TCT" value="10"/>
     </module>
     <module name="video_rtp_stream">
       <define name="VIEWVIDEO_CAMERA" value="front_camera"/>
@@ -135,7 +136,7 @@
   </command_laws>
   
   <section name="BEBOP_FRONT_CAMERA" prefix="MT9F002_">
-    <define name="OUTPUT_HEIGHT" value="520" />
+    <define name="OUTPUT_HEIGHT" value="260" />
     <define name="OUTPUT_WIDTH" value="240" />
     <define name="OFFSET_X" value="0.09" />
     <define name="ZOOM" value="1.25"/>
