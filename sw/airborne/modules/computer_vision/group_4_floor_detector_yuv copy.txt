@@ -2,15 +2,12 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
-#include <stdlib.h>
 
 
 #include "modules/computer_vision/lib/vision/image.h"
 #include "group_4_floor_detector.h"
 #include "modules/core/abi.h"
 
-// #include "svm_model_step_10x10.h"
-#include "SIM_svm_model_step_10x10.h"
 
 uint8_t R_lim = 100;
 uint8_t G_lim = 100;
@@ -18,18 +15,6 @@ uint8_t B_lim = 70;
 
 bool det_draw1 = FLOOR_DET_DRAW;
 bool det_draw2 = FLOOR_DET_DRAW2;
-
-
-static int svm_predict_from_features(const uint8_t *input_features) {
-  float score = 0.0f;
-  for (int i = 0; i < SVM_NUM_FEATURES; ++i) {
-    score += svm_weights[i] * input_features[i];
-  }
-  score += svm_bias;
-  printf("score: %5f", score);
-  return (score > 0.0f) ? 1 : 0;
-}
-
 
 
 bool visited[WIDTH][HEIGHT];
@@ -86,8 +71,10 @@ static void isolateLargestCluster(uint8_t *buffer, uint8_t *new_buffer, short w,
                 if (cluster_size > max_cluster_size) {
                     max_cluster_size = cluster_size;
                     max_cluster_x = i;
-                    max_cluster_y = j;
-                  }
+                    max_cluster_y = j; create mode 100644 sw/airborne/modules/computer_vision/group_4_floor_detector_lookup.c
+                    create mode 100644 sw/airborne/modules/computer_vision/group_4_floor_detector_original.c
+                    create mode 100644 sw/airborne/modules/computer_vision/group_4_floor_detector_yuv.c
+                }
             }
         }
     }
@@ -123,41 +110,10 @@ int right_sum = 0;;
 
 static struct image_t *g4_floor_det_func(struct image_t *img, uint8_t camera_id __attribute__((unused)))
 {  
-
   short h = img->h;
   short w = img->w;
   uint8_t *source = (uint8_t *)img->buf;
   uint8_t *dest = Buffer_2;
-
-
-
-  uint8_t input_features[SVM_NUM_FEATURES];
-  int feature_idx = 0;
-  const int step_y = SVM_STEP_Y;
-  const int step_x = SVM_STEP_X;
-
-  for (int y = 0; y < h; y += step_y) {
-    for (int x = 0; x < w - 1; x += step_x * 2) {
-      int byte_index = y * w * 2 + (x & ~1) * 2;
-      if (byte_index + 3 >= w * h * 2 || feature_idx + 3 >= SVM_NUM_FEATURES) break;
-
-      uint8_t u = source[byte_index + 0];
-      uint8_t y0 = source[byte_index + 1];
-      uint8_t v = source[byte_index + 2];
-      uint8_t y1 = source[byte_index + 3];
-
-      input_features[feature_idx++] = u;
-      input_features[feature_idx++] = y0;
-      input_features[feature_idx++] = v;
-      input_features[feature_idx++] = y1;
-    }
-  }
-
-  int tree_detected = svm_predict_from_features(input_features);
-
-
-
-
   for(short i = 0; i<h; i++){
     for(short j = 0; j<w; j+=2){
       short y1 = (short)source[1];
@@ -171,9 +127,6 @@ static struct image_t *g4_floor_det_func(struct image_t *img, uint8_t camera_id 
     }
   }
   isolateLargestCluster(Buffer_2, Buffer_3, w, h);
-
-
-
 
   if(true){
   int middle = h / 2; 
@@ -246,26 +199,10 @@ if(gap){
     if (left){ cmd = 2;}
     else if (right){cmd = 3;};
   }
-
-
-  if (tree_detected){
-    printf("TREE detected");
-    if (cmd = 1)
-    cmd = 4;
-  }
-  else{
-  // printf("TREE NOT detected");
-  }
-
   pthread_mutex_lock(&mutex);
   move_global[0].cmd = cmd;
   move_global[0].updated = true;
   pthread_mutex_unlock(&mutex);
-  
-  
-
-
-  
   if(det_draw1){
     uint8_t *source2 = (uint8_t *)img->buf;
     uint8_t *dest2 = Buffer_2;
@@ -294,8 +231,6 @@ if(gap){
       }
     }
   }
-
-
   return img;
 }
 
