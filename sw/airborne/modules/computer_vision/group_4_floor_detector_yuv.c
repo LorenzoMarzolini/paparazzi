@@ -175,7 +175,6 @@ static struct image_t *g4_floor_det_func(struct image_t *img, uint8_t camera_id 
 
 
 
-
   if(true){
   int middle = h / 2; 
   int slice = (int)(h / 5) / 2; 
@@ -221,7 +220,6 @@ static struct image_t *g4_floor_det_func(struct image_t *img, uint8_t camera_id 
           right_sum++;
       }
   }
-
   for (int x = middle - slice; x <= middle + slice; x++) {
     if (x < 0 || x >= h) continue; 
 
@@ -318,5 +316,6 @@ void g4_floor_det_periodic(void)
   pthread_mutex_lock(&mutex);
   memcpy(move, move_global, sizeof(struct msg_det));
   pthread_mutex_unlock(&mutex);
+  printf("message:%d",move[0].cmd);
   if(move[0].updated){AbiSendMsgTCT_AP_Direct(TCT_FLOOR_DETECTION_ID, move[0].cmd, (int16_t)0); move[0].updated = false;};
 }

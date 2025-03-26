@@ -6,16 +6,16 @@
 #include "state.h"
 #include "modules/core/abi.h"
 
-float oag_max_speed = 0.2; 
+float oag_max_speed = 0.5; 
 int increase_speed = 0;
 int increase_speed_counter = 10;
-int speed_counter_reset = 50;
+int speed_counter_reset = 25;
 char prev_spin = 1;
 char extra_spin_counter =0;
 float oag_heading_rate = 15.0;
 int8_t prev_setting = 0; 
 int counter = 0;
-int counter_reset = 20;
+int counter_reset = 0;
 enum navigation_state_t{
     HOLD,
     SAFE,
@@ -56,10 +56,6 @@ static void floor_detection_listener(uint8_t __attribute__((unused)) sender_id, 
       break;
     case 4:
       navigation_state = OUT_OF_BOUNDS;
-      if(prev_spin == 1){
-        if(extra_spin_counter == 0){prev_spin *= -1;} else {extra_spin_counter -=1;}
-      }
-      else if (prev_spin == -1){prev_spin *= -1; extra_spin_counter = 1;}
       break;
     case 5:
       navigation_state = OUT_OF_BOUNDS_DELAY;
@@ -96,16 +92,12 @@ void floor_detect_periodic(void)
     break;
   
   case SAFE:
-    if(counter < (counter_reset*3)/4){ guidance_h_set_heading_rate(RadOfDeg(0));};
-    if(counter == 0){
+      guidance_h_set_heading_rate(RadOfDeg(0));
       guidance_h_set_body_vel(oag_max_speed + increase_speed*0.1, 0);
       if (increase_speed_counter < 1 && increase_speed < 5){
         increase_speed_counter = speed_counter_reset;
         increase_speed += 1;
       }
-      else {increase_speed_counter -= 1;}
-    }
-    else {counter = counter-1; printf("Waiting%d-%d", counter, counter_reset);}
     break;
   
   case OBSTACLE_FOUND_LEFT:
@@ -125,7 +117,7 @@ void floor_detect_periodic(void)
     break;
   case OUT_OF_BOUNDS:
     guidance_h_set_body_vel(0, 0);
-    guidance_h_set_heading_rate(RadOfDeg(prev_spin*oag_heading_rate));
+    guidance_h_set_heading_rate(RadOfDeg(-oag_heading_rate));
     increase_speed = 0;
     increase_speed_counter = speed_counter_reset;
     counter = counter_reset;

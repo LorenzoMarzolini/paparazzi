@@ -91,7 +91,7 @@
       <define name="FLOOR_DET_DRAW" value="0"/>
       <define name="FLOOR_DET_DRAW2" value="0"/>
       <define name="HEIGHT" value="240"/>
-      <define name="WIDTH" value="260"/>
+      <define name="WIDTH" value="520"/>
     </module>
     
     <module name="Floor_Detect_TCT">
