@@ -83,7 +83,6 @@ void floor_detect_init(void)
 void floor_detect_periodic(void)
 {
   if (guidance_h.mode != GUIDANCE_H_MODE_GUIDED) {
-    floor_detect_reset();
     return;
   }
   switch (navigation_state)

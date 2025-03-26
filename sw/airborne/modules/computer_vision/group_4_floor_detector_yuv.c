@@ -41,7 +41,8 @@ static int floodFill(uint8_t *buffer, uint8_t *new_buffer, int x, int y, short w
           
       }
       int neighbors[8][2] = {
-          {cx - 1, cy}, {cx + 1, cy}, {cx, cy - 1}, {cx, cy + 1}
+          {cx - 1, cy}, {cx + 1, cy}, {cx, cy - 1}, {cx, cy + 1},
+          {cx - 1, cy - 1}, {cx - 1, cy + 1}, {cx + 1, cy - 1}, {cx + 1, cy + 1}
       };
 
       for (int i = 0; i < 8; i++) {
@@ -134,14 +135,8 @@ static struct image_t *g4_floor_det_func(struct image_t *img, uint8_t camera_id 
   left = false;
   right = false;
   gap = false;
-
-  float pitch_angle = stateGetNedToBodyEulers_f()->theta;
-  float scaling_factor = 50; 
-  int offset = (int)(pitch_angle * scaling_factor);
-  if (offset > 0){offset = 0;};
-  if (offset < -w/2){offset = w/2;};
   for (int y = 0; y < h; y++) {
-      hort_check[y] = Buffer_3[y * w + (h - 1) + offset];
+      hort_check[y] = Buffer_3[y * w + (h - 1)];
   }
   int active_pixels = 0;
   for (int y = 0; y < h; y++) {
