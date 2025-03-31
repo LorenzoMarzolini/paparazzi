@@ -183,23 +183,28 @@ static struct image_t *g4_floor_det_func(struct image_t *img, uint8_t camera_id 
   left = false;
   right = false;
   gap = false;
+  //Construct hort_heck based on bottom row of image
   for (int y = 0; y < h; y++) {
       hort_check[y] = Buffer_3[y * w + (h - 1)];
   }
+  // Check amount of pixels in hort_check
   int active_pixels = 0;
   for (int y = 0; y < h; y++) {
       if (hort_check[y] > 0) {
           active_pixels++;
       }
   }
+  // Check if what we detected was floor if not we are most likely out of bounds
   if (active_pixels < slice) {
       spin = true;
   }
   if(!spin){
+    // Reset vertcheck
     for (int x = 0; x < h; x++) {
       vert_check[x] = 0;
   }
 
+  // Build vert_check by looping over each column and each pixel in those columns
   for (int x = 0; x < h; x++) {
       for (int y = 0; y < w; y++) {
           if (Buffer_3[x * w + y] > 0) {
@@ -210,16 +215,19 @@ static struct image_t *g4_floor_det_func(struct image_t *img, uint8_t camera_id 
   }
   left_sum = 0;
   right_sum = 0;
+  // Count left of middle
   for (int x = 0; x < middle; x++) {
     if (vert_check[x] > 0) {
         left_sum++;
     }
   }
+  // Count right of middle
   for (int x = middle; x < h; x++) {
       if (vert_check[x] > 0) {
           right_sum++;
       }
   }
+  // check if there is a missing pixel inside of the slice in the center of the image
   for (int x = middle - slice; x <= middle + slice; x++) {
     if (x < 0 || x >= h) continue; 
 
@@ -232,6 +240,7 @@ static struct image_t *g4_floor_det_func(struct image_t *img, uint8_t camera_id 
       break;
     }
 }
+// If we have to turn check which direction
 if(gap){
     printf("Left:%d Right:%d", left_sum, right_sum);
     if (right_sum > left_sum) {
@@ -243,6 +252,7 @@ if(gap){
   }
     }
   }
+  // Set command
   cmd = 1;
   if(spin){cmd = 4;}
   else {
@@ -260,6 +270,7 @@ if(gap){
   // printf("TREE NOT detected");
   }
 
+   // Pass command to broadcaster
   pthread_mutex_lock(&mutex);
   move_global[0].cmd = cmd;
   move_global[0].updated = true;
@@ -268,7 +279,7 @@ if(gap){
   
 
 
-  
+  // Draw buffer 2
   if(det_draw1){
     uint8_t *source2 = (uint8_t *)img->buf;
     uint8_t *dest2 = Buffer_2;
@@ -283,6 +294,7 @@ if(gap){
       }
     }
   }
+  // Draw buffer 3
   if(det_draw2){
     uint8_t *source2 = (uint8_t *)img->buf;
     uint8_t *dest2 = Buffer_3;
