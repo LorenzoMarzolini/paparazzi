@@ -44,6 +44,7 @@ static int floodFill(uint8_t *buffer, uint8_t *new_buffer, int x, int y, short w
   rear++;
   visited[x][y] = true;
 
+  //While queue not empty
   while (front < rear) {
       int cx = queue[front][0];
       int cy = queue[front][1];
@@ -55,6 +56,7 @@ static int floodFill(uint8_t *buffer, uint8_t *new_buffer, int x, int y, short w
           new_buffer[cx * w + cy] = 255; 
           
       }
+      // neigbors in all 8 directions (4 cardinal and 4 diagnonal)
       int neighbors[8][2] = {
           {cx - 1, cy}, {cx + 1, cy}, {cx, cy - 1}, {cx, cy + 1},
           {cx - 1, cy - 1}, {cx - 1, cy + 1}, {cx + 1, cy - 1}, {cx + 1, cy + 1}
@@ -63,7 +65,7 @@ static int floodFill(uint8_t *buffer, uint8_t *new_buffer, int x, int y, short w
       for (int i = 0; i < 8; i++) {
           int nx = neighbors[i][0];
           int ny = neighbors[i][1];
-
+          // Not out of bounds && not visited && green pixel
           if (nx >= 0 && nx < h && ny >= 0 && ny < w && !visited[nx][ny] && buffer[nx * w + ny] == 255) {
               visited[nx][ny] = true;
               queue[rear][0] = nx;
@@ -95,6 +97,7 @@ static void isolateLargestCluster(uint8_t *buffer, uint8_t *new_buffer, short w,
     memset(visited, 0, sizeof(visited));
     memset(new_buffer, 0, w * h); 
 
+    // Run floodfill again but now drawing on new buffer
     if (max_cluster_x != -1 && max_cluster_y != -1) {
         floodFill(buffer, new_buffer, max_cluster_x, max_cluster_y, w, h, true);
     }
